@@ -1,10 +1,10 @@
 ---
 name: hpc
-description: Work with SLURM HPC clusters from any ~/projects/* project — discover runs, submit jobs, check status, sync/fetch/pull/push data. Backed by the shared ~/repos/hpc-tools/{hpc.py,hpc.mk}. Use when the user asks to fetch/pull/push/sync simulation data, submit or resubmit a job, check job/queue status, or find which run directories exist.
+description: Work with SLURM HPC clusters from any project — discover runs, submit jobs, check status, sync/fetch/pull/push data. Backed by the shared ~/Repositories/hpc-tools/{hpc.py,hpc.mk}. Use when the user asks to fetch/pull/push/sync simulation data, submit or resubmit a job, check job/queue status, or find which run directories exist.
 user-invocable: true
 allowed-tools:
   - Read
-  - Bash(python3 ~/repos/hpc-tools/hpc.py *)
+  - Bash(python3 ~/Repositories/hpc-tools/hpc.py *)
   - Bash(make discover)
   - Bash(make status)
   - Bash(make configure*)
@@ -22,21 +22,23 @@ allowed-tools:
 Arguments passed: `$ARGUMENTS`
 
 Shared, general tooling — not project-specific — for working with SLURM
-clusters from any project under `~/projects`. Source lives in the git repo
-`~/repos/hpc-tools` (`hpc.py` for the logic, `hpc.mk` for Make targets). A
-project opts in with a one-line `Makefile`:
+clusters from any project, wherever it lives on disk. Source lives in the git
+repo `~/Repositories/hpc-tools` (`hpc.py` for the logic, `hpc.mk` for Make
+targets). A project opts in with a one-line `Makefile`:
 
 ```makefile
-include $(HOME)/repos/hpc-tools/hpc.mk
+include $(HOME)/Repositories/hpc-tools/hpc.mk
 ```
 
 No cluster name or remote path is hardcoded anywhere in the shared tooling —
-every project configures its own.
+every project configures its own. The project root is located by walking up
+from the cwd to the nearest `hpc.local.mk`, else a `Makefile` that includes
+`hpc.mk`, else a git repository root.
 
 ## First-time setup for a project (or a new cluster for an existing one)
 
 ```
-make configure CLUSTER=alex REMOTE=/home/atuin/b311bb/b311bb10/<project>
+make configure CLUSTER=alex REMOTE=/home/hpc/b314bb/b314bb13/projects/<project>
 ```
 
 Saves to `hpc.local.mk` next to the project's `Makefile` (auto-generated,
