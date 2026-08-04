@@ -28,6 +28,12 @@ callers (including the calling agent) must get explicit human confirmation
 for the specific job before ever passing --confirm.
 """
 
+# `X | None` and friends in signatures are evaluated at import time on 3.9,
+# which is still what bare `python3` resolves to on stock macOS. Keeping
+# annotations lazy means this runs anywhere with 3.7+ rather than only where
+# the caller happens to have a modern interpreter first on PATH.
+from __future__ import annotations
+
 import argparse
 import re
 import subprocess
