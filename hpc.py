@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""General SLURM/HPC helper, shared across all ~/projects/* projects.
+"""General SLURM/HPC helper, shared across projects.
 
 Subcommands: configure, discover, submit, status, sync, fetch, pull, push.
 
-No cluster/path knowledge is hardcoded here — each project configures its
-own cluster(s) once:
+No cluster/path knowledge is hardcoded here — projects may live anywhere on
+disk (the root is found by walking up, see `find_project_root`), and each
+configures its own cluster(s) once:
 
-    make configure CLUSTER=alex REMOTE=/home/atuin/b311bb/b311bb10/so4
+    make configure CLUSTER=alex REMOTE=/home/hpc/b314bb/b314bb13/projects/so4
 
 This saves to <project_root>/hpc.local.mk (auto-generated, one REMOTE_<cluster>
 line per configured cluster + a DEFAULT_CLUSTER). Later calls fall back to
@@ -34,7 +35,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-PROJECTS_ROOT = Path.home() / "projects"
 SBATCH_SCRIPT_NAMES = ("srun.sh", "submit.sh", "run.sh", "job.sh")
 RUNS_HEADER = (
     "| Date | Cluster | Dir | Job ID | Job Name | Status |\n"
@@ -42,19 +42,47 @@ RUNS_HEADER = (
 )
 
 
-def project_rel_path(path: Path) -> str:
-    """Path relative to ~/projects — only used to locate the project root."""
-    path = path.resolve()
-    try:
-        return str(path.relative_to(PROJECTS_ROOT))
-    except ValueError:
-        raise SystemExit(f"{path} is not inside {PROJECTS_ROOT}")
-
-
 def find_project_root(start: Path) -> Path:
-    """Walk up from `start` to the first child of ~/projects."""
-    rel = project_rel_path(start)
-    return PROJECTS_ROOT / rel.split("/")[0]
+    """Walk up from `start` to the enclosing project root.
+
+    Projects can live anywhere on disk — nothing here assumes a common parent
+    directory. Markers are tried in order of how definitive they are, each
+    across the whole ancestor chain before falling through to the next:
+
+    1. `hpc.local.mk` — written by `configure`, so it is the unambiguous
+       marker once a project has been set up.
+    2. a `Makefile` that includes `hpc.mk` — the bootstrap case, before the
+       first `configure`. The include check matters: run dirs often carry
+       their own unrelated Makefile.
+    3. `.git` — last resort for a project that has neither yet.
+    """
+    start = start.resolve()
+    if start.is_file():
+        start = start.parent
+    chain = [start, *start.parents]
+
+    for d in chain:
+        if (d / "hpc.local.mk").is_file():
+            return d
+
+    for d in chain:
+        makefile = d / "Makefile"
+        if makefile.is_file():
+            try:
+                if "hpc.mk" in makefile.read_text(errors="ignore"):
+                    return d
+            except OSError:
+                pass
+
+    for d in chain:
+        if (d / ".git").exists():
+            return d
+
+    raise SystemExit(
+        f"Could not locate a project root above {start}.\n"
+        "Expected one of: an hpc.local.mk, a Makefile that includes hpc.mk, "
+        "or a git repository."
+    )
 
 
 def rel_to_project(path: Path, project_root: Path) -> str:

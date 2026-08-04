@@ -1,9 +1,13 @@
-# Shared SLURM/HPC helper targets — include from any project's Makefile:
+# Shared SLURM/HPC helper targets — include from any project's Makefile,
+# pointing at wherever this repo is cloned:
 #
-#   include $(HOME)/repos/hpc-tools/hpc.mk
+#   include $(HOME)/Repositories/hpc-tools/hpc.mk
+#
+# The project itself can live anywhere; its root is found by walking up from
+# the cwd (see find_project_root in hpc.py).
 #
 # First time in a new project (or first time using a new cluster for it):
-#   make configure CLUSTER=alex REMOTE=/home/atuin/b311bb/b311bb10/<project>
+#   make configure CLUSTER=alex REMOTE=/home/hpc/b314bb/b314bb13/projects/<project>
 # saves cluster + remote project-root path into hpc.local.mk (created next to
 # this Makefile) so later calls don't need CLUSTER=... every time. The most
 # recently configured cluster becomes the default.

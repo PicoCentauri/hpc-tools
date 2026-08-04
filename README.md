@@ -1,23 +1,23 @@
 # hpc-tools
 
-General SLURM/HPC helper shared across all `~/projects/*` projects: discover
-run directories, submit jobs, check status, and sync data to/from a cluster.
+General SLURM/HPC helper shared across projects: discover run directories,
+submit jobs, check status, and sync data to/from a cluster.
 
 ## Setup
 
-Symlink (or copy) `hpc.py` and `hpc.mk` somewhere every project can reach
-them, e.g.:
-
-```sh
-ln -s ~/repos/hpc-tools/hpc.py ~/projects/hpc.py
-ln -s ~/repos/hpc-tools/hpc.mk ~/projects/hpc.mk
-```
-
-Each project then just needs a one-line `Makefile`:
+Clone this repo anywhere, then give each project a one-line `Makefile`
+pointing at it:
 
 ```makefile
-include $(HOME)/repos/hpc-tools/hpc.mk
+include $(HOME)/Repositories/hpc-tools/hpc.mk
 ```
+
+That is the whole install — `hpc.mk` locates `hpc.py` next to itself, so no
+symlinking or `PATH` setup is needed.
+
+Projects themselves can live anywhere too. The project root is found by
+walking up from the current directory to the nearest `hpc.local.mk`, else a
+`Makefile` that includes `hpc.mk`, else a git repository root.
 
 ### Claude Code skill (optional)
 
@@ -28,13 +28,15 @@ directory into place (must be a real filesystem entry at that path, not an
 include):
 
 ```sh
-ln -s ~/repos/hpc-tools/skills/hpc ~/.claude/skills/hpc
+ln -s ~/Repositories/hpc-tools/skills/hpc ~/.claude/skills/hpc
 ```
+
+Claude Code enumerates skills at session start, so restart it after linking.
 
 ## First-time project setup
 
 ```sh
-make configure CLUSTER=alex REMOTE=/home/atuin/b311bb/b311bb10/<project>
+make configure CLUSTER=alex REMOTE=/home/hpc/b314bb/b314bb13/projects/<project>
 ```
 
 Saves the cluster + its remote project-root path to `hpc.local.mk` (created
